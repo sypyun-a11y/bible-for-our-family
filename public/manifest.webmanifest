@@ -1,0 +1,19 @@
+{
+  "name": "말씀 — 개역한글 성경",
+  "short_name": "말씀",
+  "description": "오늘의 말씀, 통독, 검색, 메모. 개역한글판 성경 앱.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f4ee",
+  "theme_color": "#f7f4ee",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

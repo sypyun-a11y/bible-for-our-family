@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { loadBook, loadIndex, type BookMeta } from "@/lib/bible";
+import { ChevronRightIcon, SearchIcon } from "@/lib/icons";
 
 type Hit = {
   book: number;
@@ -43,8 +44,7 @@ export default function SearchPage() {
   }, []);
 
   const refMatch = useMemo(() => {
-    if (!query) return null;
-    if (index.length === 0) return null;
+    if (!query || index.length === 0) return null;
     return parseRef(query, index);
   }, [query, index]);
 
@@ -85,39 +85,55 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="space-y-3">
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") runSearch();
-          }}
-          placeholder="키워드 또는 '요한복음 3:16'"
-          className="w-full rounded-xl bg-[color:var(--card)] border border-[color:var(--border)] px-4 py-3 text-base focus:outline-none focus:border-[color:var(--accent)]"
-        />
+    <div className="space-y-5 fade-up">
+      <header>
+        <h1 className="text-2xl font-bold tracking-tight">구절 검색</h1>
+        <p className="text-sm text-[color:var(--muted)] mt-1">
+          키워드나 &lsquo;요한복음 3:16&rsquo; 같은 참조
+        </p>
+      </header>
 
-        <div className="flex items-center justify-between">
-          <div className="flex gap-1 rounded-full bg-[color:var(--card)] p-1 border border-[color:var(--border)]">
-            {(["all", "OT", "NT"] as const).map((s) => (
+      <div className="space-y-3">
+        <div className="relative">
+          <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[color:var(--muted)]" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") runSearch();
+            }}
+            placeholder="사랑, 평강, 요한복음 3:16…"
+            className="w-full rounded-2xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] pl-12 pr-4 py-3.5 text-base focus:outline-none focus:border-[color:var(--accent)] transition"
+            inputMode="search"
+            autoComplete="off"
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-2">
+          <div className="inline-flex gap-1 rounded-full bg-[color:var(--bg-elev)] p-1 border border-[color:var(--border)]">
+            {([
+              ["all", "전체"],
+              ["OT", "구약"],
+              ["NT", "신약"],
+            ] as const).map(([k, label]) => (
               <button
-                key={s}
-                onClick={() => setScope(s)}
-                className={`px-3 py-1 text-xs rounded-full transition ${
-                  scope === s
-                    ? "bg-[color:var(--accent)] text-white"
+                key={k}
+                onClick={() => setScope(k)}
+                className={`px-3 py-1 text-xs font-medium rounded-full transition ${
+                  scope === k
+                    ? "bg-[color:var(--accent)] text-[color:var(--accent-fg)]"
                     : "text-[color:var(--muted)]"
                 }`}
               >
-                {s === "all" ? "전체" : s === "OT" ? "구약" : "신약"}
+                {label}
               </button>
             ))}
           </div>
           <button
             onClick={runSearch}
             disabled={searching || query.trim().length < 2}
-            className="px-4 py-1.5 rounded-full bg-[color:var(--accent)] text-white text-sm font-medium disabled:opacity-40"
+            className="px-5 py-2 rounded-full bg-[color:var(--accent)] text-[color:var(--accent-fg)] text-sm font-semibold disabled:opacity-40 active:scale-95 transition"
           >
             {searching ? "검색 중…" : "검색"}
           </button>
@@ -129,33 +145,38 @@ export default function SearchPage() {
           href={`/read?book=${refMatch.book}&chapter=${refMatch.chapter}${
             refMatch.verse ? `#v${refMatch.verse}` : ""
           }`}
-          className="block rounded-xl bg-[color:var(--card)] border border-[color:var(--accent)] p-4"
+          className="block rounded-2xl bg-[color:var(--accent-soft)] p-4 flex items-center justify-between active:scale-[0.98] transition"
         >
-          <p className="text-xs text-[color:var(--accent)] font-medium">바로 가기</p>
-          <p className="font-semibold mt-1">
-            {index.find((b) => b.id === refMatch.book)?.koName} {refMatch.chapter}장
-            {refMatch.verse ? ` ${refMatch.verse}절` : ""}
-          </p>
+          <div>
+            <p className="text-[11px] uppercase tracking-wider text-[color:var(--accent)] font-semibold">
+              바로 가기
+            </p>
+            <p className="font-semibold mt-1">
+              {index.find((b) => b.id === refMatch.book)?.koName} {refMatch.chapter}장
+              {refMatch.verse ? ` ${refMatch.verse}절` : ""}
+            </p>
+          </div>
+          <ChevronRightIcon className="w-5 h-5 text-[color:var(--accent)]" />
         </Link>
       )}
 
       {hits !== null && (
         <div className="space-y-3">
-          <p className="text-xs text-[color:var(--muted)]">
+          <p className="text-xs text-[color:var(--muted)] px-1">
             {hits.length === 0
-              ? "결과 없음"
-              : `결과 ${hits.length}개${hits.length >= 200 ? " (200개로 제한됨)" : ""}`}
+              ? "결과가 없습니다"
+              : `${hits.length}개 결과${hits.length >= 200 ? " · 최대 200개" : ""}`}
           </p>
           {hits.map((h, i) => (
             <Link
               key={i}
               href={`/read?book=${h.book}&chapter=${h.chapter}#v${h.verse}`}
-              className="block rounded-xl bg-[color:var(--card)] border border-[color:var(--border)] p-4 hover:border-[color:var(--accent)] transition"
+              className="block rounded-2xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-4 active:scale-[0.99] transition"
             >
-              <p className="text-xs text-[color:var(--accent)] font-medium mb-1">
+              <p className="text-[11px] text-[color:var(--accent)] font-semibold mb-1.5 tracking-wider">
                 {h.bookName} {h.chapter}:{h.verse}
               </p>
-              <p className="verse-text text-sm leading-relaxed">
+              <p className="verse-text text-[15px] leading-relaxed">
                 <Highlight text={h.text} query={query.trim()} />
               </p>
             </Link>
@@ -176,7 +197,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
         <span key={i}>
           {p}
           {i < parts.length - 1 && (
-            <mark className="bg-[color:var(--accent)]/20 text-[color:var(--foreground)] rounded px-0.5">
+            <mark className="bg-[color:var(--highlight)] text-[color:var(--fg)] rounded px-0.5">
               {query}
             </mark>
           )}

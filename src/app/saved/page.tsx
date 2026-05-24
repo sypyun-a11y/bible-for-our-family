@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { keyToRef, loadBook, loadIndex, type BookData, type BookMeta } from "@/lib/bible";
 import { useHydrated, useLocalStorage } from "@/lib/storage";
+import { BookmarkIcon, ChevronRightIcon, StarFilledIcon } from "@/lib/icons";
 
 type Entry = {
   key: string;
@@ -79,21 +80,24 @@ export default function SavedPage() {
   };
 
   if (!hydrated) {
-    return <div className="text-[color:var(--muted)]">불러오는 중…</div>;
+    return <div className="text-[color:var(--muted)] pt-8 text-center">불러오는 중…</div>;
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 fade-up">
       <header>
         <h1 className="text-2xl font-bold tracking-tight">보관함</h1>
+        <p className="text-sm text-[color:var(--muted)] mt-1">
+          저장한 구절과 메모
+        </p>
       </header>
 
-      <div className="flex gap-1 rounded-full bg-[color:var(--card)] p-1 border border-[color:var(--border)] w-fit">
+      <div className="inline-flex gap-1 rounded-full bg-[color:var(--bg-elev)] p-1 border border-[color:var(--border)]">
         <button
           onClick={() => setTab("favorites")}
-          className={`px-4 py-1.5 text-sm rounded-full transition ${
+          className={`px-4 py-1.5 text-sm font-medium rounded-full transition ${
             tab === "favorites"
-              ? "bg-[color:var(--accent)] text-white"
+              ? "bg-[color:var(--accent)] text-[color:var(--accent-fg)]"
               : "text-[color:var(--muted)]"
           }`}
         >
@@ -101,9 +105,9 @@ export default function SavedPage() {
         </button>
         <button
           onClick={() => setTab("notes")}
-          className={`px-4 py-1.5 text-sm rounded-full transition ${
+          className={`px-4 py-1.5 text-sm font-medium rounded-full transition ${
             tab === "notes"
-              ? "bg-[color:var(--accent)] text-white"
+              ? "bg-[color:var(--accent)] text-[color:var(--accent-fg)]"
               : "text-[color:var(--muted)]"
           }`}
         >
@@ -112,41 +116,58 @@ export default function SavedPage() {
       </div>
 
       {keys.length === 0 ? (
-        <p className="text-center text-[color:var(--muted)] py-12">
-          {tab === "favorites"
-            ? "아직 저장된 구절이 없습니다."
-            : "아직 작성된 메모가 없습니다."}
-        </p>
+        <div className="text-center py-16">
+          <BookmarkIcon className="w-12 h-12 mx-auto text-[color:var(--muted)] opacity-40" />
+          <p className="text-[color:var(--muted)] mt-4">
+            {tab === "favorites"
+              ? "아직 저장된 구절이 없습니다"
+              : "아직 작성된 메모가 없습니다"}
+          </p>
+          <Link
+            href="/read"
+            className="inline-flex items-center gap-1 mt-3 text-sm font-semibold text-[color:var(--accent)]"
+          >
+            성경 읽으러 가기
+            <ChevronRightIcon className="w-4 h-4" />
+          </Link>
+        </div>
       ) : entries.length === 0 ? (
-        <div className="text-[color:var(--muted)]">불러오는 중…</div>
+        <div className="text-[color:var(--muted)] pt-8 text-center">불러오는 중…</div>
       ) : (
         <div className="space-y-3">
           {entries.map((e) => (
             <article
               key={e.key}
-              className="rounded-xl bg-[color:var(--card)] border border-[color:var(--border)] p-4"
+              className="rounded-2xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-4"
             >
               <div className="flex items-baseline justify-between mb-2">
                 <Link
                   href={`/read?book=${e.book}&chapter=${e.chapter}#v${e.verse}`}
-                  className="text-xs text-[color:var(--accent)] font-medium hover:underline"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-[color:var(--accent)] tracking-wider"
                 >
+                  <StarFilledIcon className="w-3 h-3" />
                   {e.bookName} {e.chapter}:{e.verse}
                 </Link>
                 <button
                   onClick={() =>
                     tab === "favorites" ? removeFavorite(e.key) : removeNote(e.key)
                   }
-                  className="text-xs text-[color:var(--muted)] hover:text-red-500"
+                  className="text-[11px] text-[color:var(--muted)] hover:text-red-500 active:text-red-600 transition"
                 >
                   삭제
                 </button>
               </div>
-              <p className="verse-text text-base leading-relaxed">{e.text}</p>
+              <p className="verse-text text-[15px] leading-relaxed text-[color:var(--fg)]">
+                {e.text}
+              </p>
               {e.note && (
                 <div className="mt-3 pt-3 border-t border-[color:var(--border)]">
-                  <p className="text-xs text-[color:var(--muted)] mb-1">메모</p>
-                  <p className="text-sm whitespace-pre-wrap">{e.note}</p>
+                  <p className="text-[11px] uppercase tracking-wider text-[color:var(--muted)] font-semibold mb-1">
+                    메모
+                  </p>
+                  <p className="text-sm whitespace-pre-wrap text-[color:var(--fg-soft)] leading-relaxed">
+                    {e.note}
+                  </p>
                 </div>
               )}
             </article>

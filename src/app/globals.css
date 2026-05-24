@@ -1,45 +1,118 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Pretendard Variable";
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+  src: url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/woff2/PretendardVariable.woff2") format("woff2-variations");
+}
+
 :root {
-  --background: #fafaf7;
-  --foreground: #1c1917;
-  --accent: #b45309;
+  /* warm cream + sage palette */
+  --bg: #f7f4ee;
+  --bg-elev: #ffffff;
+  --fg: #1c1917;
+  --fg-soft: #44403c;
   --muted: #78716c;
-  --border: #e7e5e4;
-  --card: #ffffff;
+  --border: #e7e0d4;
+  --accent: #5b7553;
+  --accent-soft: #d8e1d2;
+  --accent-fg: #ffffff;
+  --highlight: #f5e9c8;
+
+  --radius-card: 1.25rem;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgba(28, 25, 23, 0.04), 0 8px 24px -12px rgba(28, 25, 23, 0.08);
+  --shadow-hover: 0 4px 12px -2px rgba(28, 25, 23, 0.08), 0 16px 40px -16px rgba(28, 25, 23, 0.12);
+
+  /* reader font scale (4 steps: 0.875 / 1 / 1.125 / 1.25) */
+  --reader-scale: 1;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-accent: var(--accent);
+  --color-bg: var(--bg);
+  --color-bg-elev: var(--bg-elev);
+  --color-fg: var(--fg);
+  --color-fg-soft: var(--fg-soft);
   --color-muted: var(--muted);
   --color-border: var(--border);
-  --color-card: var(--card);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-highlight: var(--highlight);
+  --font-sans: "Pretendard Variable", var(--font-geist-sans);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1c1917;
-    --foreground: #f5f5f4;
-    --accent: #f59e0b;
-    --muted: #a8a29e;
-    --border: #292524;
-    --card: #292524;
+    --bg: #14110e;
+    --bg-elev: #1f1c19;
+    --fg: #f5f0e6;
+    --fg-soft: #d6cebf;
+    --muted: #8c8579;
+    --border: #2a2622;
+    --accent: #a3b9a0;
+    --accent-soft: #2c3a2c;
+    --accent-fg: #14110e;
+    --highlight: #4a3f1f;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+    --shadow-hover: 0 4px 12px -2px rgba(0, 0, 0, 0.5), 0 16px 40px -16px rgba(0, 0, 0, 0.7);
   }
 }
 
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Pretendard Variable", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss06" 1, "kern" 1;
+  letter-spacing: -0.01em;
+  overscroll-behavior-y: contain;
+}
+
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, textarea, select {
+  font-family: inherit;
+}
+
+@supports (padding: max(0px)) {
+  .safe-top { padding-top: max(env(safe-area-inset-top), 0.5rem); }
+  .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
 }
 
 .verse-text {
-  font-feature-settings: "kern" 1;
   word-break: keep-all;
   line-break: strict;
+  letter-spacing: -0.005em;
 }
+
+.reader-body {
+  font-size: calc(1rem * var(--reader-scale));
+  line-height: 1.85;
+}
+
+.reader-verse-num {
+  font-size: calc(0.75rem * var(--reader-scale));
+}
+
+/* hide scrollbar on horizontal book scroller */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* gentle fade-in for content */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fade-up 0.3s ease-out both; }
