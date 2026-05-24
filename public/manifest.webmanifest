@@ -1,7 +1,7 @@
 {
-  "name": "말씀 — 개역한글 성경",
+  "name": "말씀 — 오늘의 한 구절",
   "short_name": "말씀",
-  "description": "오늘의 말씀, 통독, 검색, 메모. 개역한글판 성경 앱.",
+  "description": "조용한 아침에 깃드는 한 구절. 매일의 묵상, 통독, 그리고 마음에 남기는 메모.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
