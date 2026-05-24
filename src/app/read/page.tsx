@@ -34,7 +34,12 @@ function ReadInner() {
     "lastRead",
     null,
   );
+  const [readerFont, setReaderFont] = useLocalStorage<"sans" | "serif">(
+    "readerFont",
+    "serif",
+  );
   const [openVerse, setOpenVerse] = useState<number | null>(null);
+  const [popVerse, setPopVerse] = useState<number>(0);
   const { index: scaleIdx, inc, dec, canInc, canDec } = useReaderFontScale();
 
   const bookId = Number(params.get("book") ?? "0");
@@ -76,6 +81,7 @@ function ReadInner() {
     setFavorites((p) =>
       p.includes(key) ? p.filter((k) => k !== key) : [...p, key],
     );
+    setPopVerse((n) => n + 1);
   };
 
   const updateNote = (verseIdx: number, value: string) => {
@@ -88,146 +94,165 @@ function ReadInner() {
     });
   };
 
+  const useSerif = readerFont === "serif";
+
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between -mt-2">
-        <button
-          onClick={() => router.push("/read")}
-          className="inline-flex items-center gap-1 text-sm font-medium text-[color:var(--muted)] active:text-[color:var(--accent)] py-2 -ml-2 pl-2"
-        >
-          <ArrowLeftIcon className="w-5 h-5" />
-          목차
-        </button>
-
-        <div className="inline-flex items-center gap-0.5 rounded-full bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-1">
+    <div className="bg-warm-aurora -mx-5 -mt-6 px-5 pt-6 pb-2 min-h-[calc(100vh-7rem)]">
+      <div className="flex flex-col gap-5">
+        <div className="flex items-center justify-between -mt-2 fade-up">
           <button
-            onClick={dec}
-            disabled={!canDec}
-            aria-label="글씨 작게"
-            className="w-8 h-8 inline-flex items-center justify-center rounded-full text-[color:var(--fg-soft)] disabled:opacity-30 active:bg-[color:var(--bg)]"
+            onClick={() => router.push("/read")}
+            className="inline-flex items-center gap-1 text-sm font-medium text-[color:var(--muted)] active:text-[color:var(--accent)] py-2 -ml-2 pl-2 press"
           >
-            <MinusIcon className="w-4 h-4" />
+            <ArrowLeftIcon className="w-5 h-5" />
+            목차
           </button>
-          <span className="text-[11px] font-medium text-[color:var(--muted)] px-1 tabular-nums w-6 text-center">
-            {scaleIdx + 1}
-          </span>
-          <button
-            onClick={inc}
-            disabled={!canInc}
-            aria-label="글씨 크게"
-            className="w-8 h-8 inline-flex items-center justify-center rounded-full text-[color:var(--fg-soft)] disabled:opacity-30 active:bg-[color:var(--bg)]"
-          >
-            <PlusIcon className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
 
-      <header className="text-center">
-        <p className="text-[11px] uppercase tracking-widest text-[color:var(--muted)] font-medium">
-          {bookMeta.enName}
-        </p>
-        <ChapterPicker
-          bookMeta={bookMeta}
-          chapter={chapter}
-          onPick={(c) => router.push(`/read?book=${bookId}&chapter=${c}`)}
-        />
-      </header>
-
-      <div className="reader-body space-y-4">
-        {verses.map((text, i) => {
-          const verseNum = i + 1;
-          const key = `${bookId}.${chapter}.${verseNum}`;
-          const isFav = hydrated && favorites.includes(key);
-          const note = hydrated ? notes[key] : undefined;
-          const isOpen = openVerse === verseNum;
-          return (
-            <article
-              key={i}
-              id={`v${verseNum}`}
-              className="scroll-mt-20 group"
+          <div className="inline-flex items-center gap-1">
+            <button
+              onClick={() => setReaderFont(useSerif ? "sans" : "serif")}
+              className="inline-flex items-center gap-1 px-3 h-8 rounded-full bg-[color:var(--bg-elev)] border border-[color:var(--border)] text-xs font-semibold press"
+              title="폰트 전환"
+              aria-label={useSerif ? "고딕체로 보기" : "명조체로 보기"}
             >
+              <span className={useSerif ? "font-serif" : ""}>가</span>
+              <span className={!useSerif ? "font-serif" : ""}>나</span>
+            </button>
+            <div className="inline-flex items-center gap-0.5 rounded-full bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-1">
               <button
-                onClick={() => setOpenVerse(isOpen ? null : verseNum)}
-                className="w-full text-left flex gap-3 items-start"
+                onClick={dec}
+                disabled={!canDec}
+                aria-label="글씨 작게"
+                className="w-8 h-8 inline-flex items-center justify-center rounded-full text-[color:var(--fg-soft)] disabled:opacity-30 active:bg-[color:var(--bg)] press"
               >
-                <span
-                  className={`reader-verse-num flex-none w-7 pt-[0.35em] text-right font-semibold tabular-nums transition ${
-                    isFav
-                      ? "text-[color:var(--accent)]"
-                      : "text-[color:var(--muted)]"
-                  }`}
-                >
-                  {isFav ? "★" : verseNum}
-                </span>
-                <span
-                  className={`verse-text flex-1 ${
-                    note ? "bg-[color:var(--highlight)]/40 rounded px-1 -mx-1" : ""
-                  }`}
-                >
-                  {text}
-                </span>
+                <MinusIcon className="w-4 h-4" />
               </button>
+              <span className="text-[11px] font-medium text-[color:var(--muted)] tabular-nums w-6 text-center">
+                {scaleIdx + 1}
+              </span>
+              <button
+                onClick={inc}
+                disabled={!canInc}
+                aria-label="글씨 크게"
+                className="w-8 h-8 inline-flex items-center justify-center rounded-full text-[color:var(--fg-soft)] disabled:opacity-30 active:bg-[color:var(--bg)] press"
+              >
+                <PlusIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
 
-              {isOpen && (
-                <div className="ml-10 mt-2 mb-2 fade-up">
-                  <div className="flex items-center gap-2 mb-2">
-                    <button
-                      onClick={() => toggleFav(i)}
-                      className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-[color:var(--border)] active:bg-[color:var(--bg)]"
-                    >
-                      {isFav ? (
-                        <>
-                          <StarFilledIcon className="w-3.5 h-3.5 text-[color:var(--accent)]" />
-                          저장됨
-                        </>
-                      ) : (
-                        <>
-                          <StarIcon className="w-3.5 h-3.5" />
-                          저장
-                        </>
-                      )}
-                    </button>
+        <header className="text-center fade-up-1">
+          <p className="font-serif text-[11px] italic tracking-[0.25em] text-[color:var(--muted)] uppercase">
+            {bookMeta.enName}
+          </p>
+          <div className="font-serif text-[28px] font-semibold tracking-tight mt-1">
+            {bookMeta.koName}
+          </div>
+          <ChapterPicker
+            bookMeta={bookMeta}
+            chapter={chapter}
+            onPick={(c) => router.push(`/read?book=${bookId}&chapter=${c}`)}
+          />
+        </header>
+
+        <div className={`reader-body ${useSerif ? "font-serif reader-body-serif" : ""} space-y-4 fade-up-2`}>
+          {verses.map((text, i) => {
+            const verseNum = i + 1;
+            const key = `${bookId}.${chapter}.${verseNum}`;
+            const isFav = hydrated && favorites.includes(key);
+            const note = hydrated ? notes[key] : undefined;
+            const isOpen = openVerse === verseNum;
+            return (
+              <article
+                key={i}
+                id={`v${verseNum}`}
+                className="scroll-mt-20 group"
+              >
+                <button
+                  onClick={() => setOpenVerse(isOpen ? null : verseNum)}
+                  className="w-full text-left flex gap-3 items-start"
+                >
+                  <span
+                    className={`reader-verse-num flex-none w-7 pt-[0.5em] text-right tabular-nums transition ${
+                      useSerif ? "italic" : "font-semibold"
+                    } ${
+                      isFav
+                        ? "text-[color:var(--accent)]"
+                        : "text-[color:var(--muted)]"
+                    }`}
+                  >
+                    {isFav ? "★" : verseNum}
+                  </span>
+                  <span
+                    className={`verse-text flex-1 ${
+                      note
+                        ? "bg-[color:var(--highlight)]/50 rounded px-1.5 -mx-1"
+                        : ""
+                    }`}
+                  >
+                    {text}
+                  </span>
+                </button>
+
+                {isOpen && (
+                  <div className="ml-10 mt-3 mb-2 fade-up">
+                    <div className="flex items-center gap-2 mb-2">
+                      <button
+                        onClick={() => toggleFav(i)}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-[color:var(--border)] bg-[color:var(--bg-elev)] press"
+                      >
+                        <span key={`${verseNum}-${popVerse}`} className={popVerse > 0 ? "star-pop inline-flex" : "inline-flex"}>
+                          {isFav ? (
+                            <StarFilledIcon className="w-3.5 h-3.5 text-[color:var(--accent)]" />
+                          ) : (
+                            <StarIcon className="w-3.5 h-3.5" />
+                          )}
+                        </span>
+                        {isFav ? "저장됨" : "저장"}
+                      </button>
+                    </div>
+                    <NoteEditor
+                      initial={note ?? ""}
+                      onSave={(v) => updateNote(i, v)}
+                    />
                   </div>
-                  <NoteEditor
-                    initial={note ?? ""}
-                    onSave={(v) => updateNote(i, v)}
-                  />
-                </div>
-              )}
-            </article>
-          );
-        })}
-      </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
 
-      <div className="grid grid-cols-2 gap-3 pt-6 border-t border-[color:var(--border)]">
-        {prev ? (
-          <Link
-            href={`/read?book=${prev.book}&chapter=${prev.chapter}`}
-            className="rounded-2xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-4 flex items-center gap-2 active:scale-[0.98] transition"
-          >
-            <ChevronLeftIcon className="w-5 h-5 text-[color:var(--muted)]" />
-            <div className="text-left">
-              <p className="text-[11px] text-[color:var(--muted)]">이전</p>
-              <p className="text-sm font-semibold">{prev.label}</p>
-            </div>
-          </Link>
-        ) : (
-          <span />
-        )}
-        {next ? (
-          <Link
-            href={`/read?book=${next.book}&chapter=${next.chapter}`}
-            className="rounded-2xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-4 flex items-center justify-end gap-2 active:scale-[0.98] transition"
-          >
-            <div className="text-right">
-              <p className="text-[11px] text-[color:var(--muted)]">다음</p>
-              <p className="text-sm font-semibold">{next.label}</p>
-            </div>
-            <ChevronRightIcon className="w-5 h-5 text-[color:var(--accent)]" />
-          </Link>
-        ) : (
-          <span />
-        )}
+        <div className="grid grid-cols-2 gap-3 pt-6 border-t border-[color:var(--border)] fade-up-3">
+          {prev ? (
+            <Link
+              href={`/read?book=${prev.book}&chapter=${prev.chapter}`}
+              className="rounded-2xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-4 flex items-center gap-2 press"
+            >
+              <ChevronLeftIcon className="w-5 h-5 text-[color:var(--muted)]" />
+              <div className="text-left">
+                <p className="text-[11px] text-[color:var(--muted)]">이전</p>
+                <p className="text-sm font-semibold">{prev.label}</p>
+              </div>
+            </Link>
+          ) : (
+            <span />
+          )}
+          {next ? (
+            <Link
+              href={`/read?book=${next.book}&chapter=${next.chapter}`}
+              className="rounded-2xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-4 flex items-center justify-end gap-2 press"
+            >
+              <div className="text-right">
+                <p className="text-[11px] text-[color:var(--muted)]">다음</p>
+                <p className="text-sm font-semibold">{next.label}</p>
+              </div>
+              <ChevronRightIcon className="w-5 h-5 text-[color:var(--accent)]" />
+            </Link>
+          ) : (
+            <span />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -247,11 +272,15 @@ function ChapterPicker({
     <div className="relative inline-block mt-1">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 text-2xl font-bold tracking-tight active:opacity-70"
+        className="inline-flex items-center gap-1.5 font-serif text-[56px] font-light leading-none tracking-tight text-[color:var(--accent)] active:opacity-70 press"
+        aria-label={`${chapter}장 — 다른 장 선택`}
       >
-        {bookMeta.koName} {chapter}장
-        <ChevronDownIcon className="w-5 h-5 text-[color:var(--muted)]" />
+        {chapter}
+        <ChevronDownIcon className="w-5 h-5 text-[color:var(--muted)] mt-2" />
       </button>
+      <p className="text-[10px] uppercase tracking-widest text-[color:var(--muted)] font-medium mt-1">
+        Chapter {chapter}
+      </p>
       {open && (
         <>
           <div
@@ -259,7 +288,7 @@ function ChapterPicker({
             onClick={() => setOpen(false)}
             aria-hidden="true"
           />
-          <div className="absolute left-1/2 -translate-x-1/2 mt-2 z-30 w-64 max-h-72 overflow-y-auto rounded-2xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] shadow-[var(--shadow-hover)] p-2">
+          <div className="absolute left-1/2 -translate-x-1/2 mt-2 z-30 w-72 max-h-72 overflow-y-auto rounded-2xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] shadow-[var(--shadow-hover)] p-2 fade-up">
             <div className="grid grid-cols-5 gap-1">
               {Array.from({ length: bookMeta.chapterCount }, (_, i) => i + 1).map((c) => (
                 <button
@@ -268,7 +297,7 @@ function ChapterPicker({
                     onPick(c);
                     setOpen(false);
                   }}
-                  className={`aspect-square rounded-lg text-sm font-medium transition ${
+                  className={`aspect-square rounded-lg text-sm font-medium transition press ${
                     c === chapter
                       ? "bg-[color:var(--accent)] text-[color:var(--accent-fg)]"
                       : "text-[color:var(--fg-soft)] hover:bg-[color:var(--bg)]"
@@ -350,14 +379,15 @@ function BookPicker({
   return (
     <div className="space-y-6 fade-up">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight">성경 읽기</h1>
+        <span className="eyebrow">SCRIPTURE</span>
+        <h1 className="text-2xl font-bold tracking-tight mt-2">성경 읽기</h1>
         <p className="text-sm text-[color:var(--muted)] mt-1">개역한글판 · 66권</p>
       </header>
 
       {lastReadBook && lastRead && (
         <Link
           href={`/read?book=${lastRead.book}&chapter=${lastRead.chapter}`}
-          className="block rounded-2xl bg-[color:var(--accent-soft)] p-4 flex items-center justify-between"
+          className="block rounded-2xl bg-[color:var(--accent-soft)] p-4 flex items-center justify-between press fade-up-1"
         >
           <div>
             <p className="text-[11px] uppercase tracking-wider text-[color:var(--accent)] font-semibold">
@@ -371,14 +401,14 @@ function BookPicker({
         </Link>
       )}
 
-      <section>
+      <section className="fade-up-2">
         <h2 className="text-xs font-semibold tracking-widest uppercase text-[color:var(--muted)] mb-3 px-1">
           구약 · 39권
         </h2>
         <BookGrid books={ot} />
       </section>
 
-      <section>
+      <section className="fade-up-3">
         <h2 className="text-xs font-semibold tracking-widest uppercase text-[color:var(--muted)] mb-3 px-1">
           신약 · 27권
         </h2>
@@ -395,7 +425,7 @@ function BookGrid({ books }: { books: BookMeta[] }) {
         <Link
           key={b.id}
           href={`/read?book=${b.id}&chapter=1`}
-          className="rounded-xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] py-3 px-2 text-center hover:border-[color:var(--accent)] active:scale-95 transition"
+          className="rounded-xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] py-3 px-2 text-center hover:border-[color:var(--accent)] press"
         >
           <p className="font-semibold text-sm tracking-tight">{b.koName}</p>
           <p className="text-[10px] text-[color:var(--muted)] mt-0.5">

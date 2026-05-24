@@ -87,7 +87,8 @@ export default function SearchPage() {
   return (
     <div className="space-y-5 fade-up">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight">구절 검색</h1>
+        <span className="eyebrow">SEARCH</span>
+        <h1 className="text-2xl font-bold tracking-tight mt-2">구절 검색</h1>
         <p className="text-sm text-[color:var(--muted)] mt-1">
           키워드나 &lsquo;요한복음 3:16&rsquo; 같은 참조
         </p>
@@ -133,7 +134,7 @@ export default function SearchPage() {
           <button
             onClick={runSearch}
             disabled={searching || query.trim().length < 2}
-            className="px-5 py-2 rounded-full bg-[color:var(--accent)] text-[color:var(--accent-fg)] text-sm font-semibold disabled:opacity-40 active:scale-95 transition"
+            className="px-5 py-2 rounded-full bg-[color:var(--accent)] text-[color:var(--accent-fg)] text-sm font-semibold disabled:opacity-40 press"
           >
             {searching ? "검색 중…" : "검색"}
           </button>
@@ -145,7 +146,7 @@ export default function SearchPage() {
           href={`/read?book=${refMatch.book}&chapter=${refMatch.chapter}${
             refMatch.verse ? `#v${refMatch.verse}` : ""
           }`}
-          className="block rounded-2xl bg-[color:var(--accent-soft)] p-4 flex items-center justify-between active:scale-[0.98] transition"
+          className="block rounded-2xl bg-[color:var(--accent-soft)] p-4 flex items-center justify-between press"
         >
           <div>
             <p className="text-[11px] uppercase tracking-wider text-[color:var(--accent)] font-semibold">
@@ -161,7 +162,7 @@ export default function SearchPage() {
       )}
 
       {hits !== null && (
-        <div className="space-y-3">
+        <div className="space-y-3 fade-up">
           <p className="text-xs text-[color:var(--muted)] px-1">
             {hits.length === 0
               ? "결과가 없습니다"
@@ -171,12 +172,12 @@ export default function SearchPage() {
             <Link
               key={i}
               href={`/read?book=${h.book}&chapter=${h.chapter}#v${h.verse}`}
-              className="block rounded-2xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-4 active:scale-[0.99] transition"
+              className="block rounded-2xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-4 press-soft"
             >
               <p className="text-[11px] text-[color:var(--accent)] font-semibold mb-1.5 tracking-wider">
                 {h.bookName} {h.chapter}:{h.verse}
               </p>
-              <p className="verse-text text-[15px] leading-relaxed">
+              <p className="verse-text font-serif text-[15px] leading-relaxed">
                 <Highlight text={h.text} query={query.trim()} />
               </p>
             </Link>

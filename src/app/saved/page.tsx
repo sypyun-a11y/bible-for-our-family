@@ -86,7 +86,8 @@ export default function SavedPage() {
   return (
     <div className="space-y-5 fade-up">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight">보관함</h1>
+        <span className="eyebrow">COLLECTION</span>
+        <h1 className="text-2xl font-bold tracking-tight mt-2">보관함</h1>
         <p className="text-sm text-[color:var(--muted)] mt-1">
           저장한 구절과 메모
         </p>
@@ -157,7 +158,7 @@ export default function SavedPage() {
                   삭제
                 </button>
               </div>
-              <p className="verse-text text-[15px] leading-relaxed text-[color:var(--fg)]">
+              <p className="verse-text font-serif text-[16px] leading-[1.85] text-[color:var(--fg)]">
                 {e.text}
               </p>
               {e.note && (

@@ -15,6 +15,7 @@ import {
   type ReadingPlan,
 } from "@/lib/plans";
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, FlameIcon } from "@/lib/icons";
+import { Confetti } from "../_components/Confetti";
 
 export default function PlanPage() {
   const hydrated = useHydrated();
@@ -82,13 +83,14 @@ function PlanSetup({
   return (
     <div className="space-y-6 fade-up">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight">통독 시작</h1>
+        <span className="eyebrow">READING PLAN</span>
+        <h1 className="text-2xl font-bold tracking-tight mt-2">통독 시작</h1>
         <p className="text-sm text-[color:var(--muted)] mt-1">
           매일 분량을 읽고 진도를 체크하세요
         </p>
       </header>
 
-      <div className="inline-flex gap-1 rounded-full bg-[color:var(--bg-elev)] p-1 border border-[color:var(--border)]">
+      <div className="inline-flex gap-1 rounded-full bg-[color:var(--bg-elev)] p-1 border border-[color:var(--border)] fade-up-1">
         {([
           ["preset", "프리셋"],
           ["days", "기간으로"],
@@ -97,7 +99,7 @@ function PlanSetup({
           <button
             key={k}
             onClick={() => setMode(k)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-full transition ${
+            className={`px-3 py-1.5 text-xs font-medium rounded-full transition press ${
               mode === k
                 ? "bg-[color:var(--accent)] text-[color:var(--accent-fg)]"
                 : "text-[color:var(--muted)]"
@@ -109,21 +111,27 @@ function PlanSetup({
       </div>
 
       {mode === "preset" && (
-        <div className="space-y-3">
-          {PRESET_LIST.map((p) => {
+        <div className="space-y-3 fade-up-2">
+          {PRESET_LIST.map((p, i) => {
             const plan = buildPresetPlan(p.key, index);
             const avg = (plan.assignments.reduce((s, a) => s + a.units.length, 0) / plan.totalDays).toFixed(1);
+            const gradients = [
+              "from-[#5b7553] to-[#7a936f]",
+              "from-[#c89968] to-[#d8b685]",
+              "from-[#6b87a8] to-[#8aa6c7]",
+              "from-[#a47597] to-[#c191b1]",
+            ];
             return (
               <button
                 key={p.key}
                 onClick={() => start(`preset:${p.key}`)}
-                className="w-full text-left rounded-2xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-5 hover:border-[color:var(--accent)] active:scale-[0.99] transition"
+                className={`w-full text-left rounded-2xl bg-gradient-to-br ${gradients[i % 4]} p-5 text-white press shadow-[var(--shadow-card)]`}
               >
                 <div className="flex items-baseline justify-between">
-                  <p className="text-lg font-bold tracking-tight">{p.name}</p>
-                  <p className="text-xs text-[color:var(--muted)]">하루 평균 {avg}장</p>
+                  <p className="font-serif text-xl font-semibold tracking-tight">{p.name}</p>
+                  <p className="text-xs opacity-85">하루 평균 {avg}장</p>
                 </div>
-                <p className="text-sm text-[color:var(--muted)] mt-1">{p.description}</p>
+                <p className="text-sm opacity-85 mt-1">{p.description}</p>
               </button>
             );
           })}
@@ -131,7 +139,7 @@ function PlanSetup({
       )}
 
       {mode === "days" && (
-        <div className="space-y-4">
+        <div className="space-y-4 fade-up-2">
           <label className="block">
             <span className="text-sm font-medium text-[color:var(--fg-soft)]">
               며칠 안에 완독할까요?
@@ -152,7 +160,7 @@ function PlanSetup({
           {customPlan && <PlanPreview plan={customPlan} />}
           <button
             onClick={() => start(`custom:days:${days}`)}
-            className="w-full rounded-full bg-[color:var(--accent)] text-[color:var(--accent-fg)] py-3.5 font-semibold active:scale-[0.98] transition"
+            className="w-full rounded-full bg-[color:var(--accent)] text-[color:var(--accent-fg)] py-3.5 font-semibold press"
           >
             {days}일 통독 시작
           </button>
@@ -160,7 +168,7 @@ function PlanSetup({
       )}
 
       {mode === "cpd" && (
-        <div className="space-y-4">
+        <div className="space-y-4 fade-up-2">
           <label className="block">
             <span className="text-sm font-medium text-[color:var(--fg-soft)]">
               하루에 몇 장씩 읽을까요?
@@ -181,7 +189,7 @@ function PlanSetup({
           {customPlan && <PlanPreview plan={customPlan} />}
           <button
             onClick={() => start(`custom:cpd:${cpd}`)}
-            className="w-full rounded-full bg-[color:var(--accent)] text-[color:var(--accent-fg)] py-3.5 font-semibold active:scale-[0.98] transition"
+            className="w-full rounded-full bg-[color:var(--accent)] text-[color:var(--accent-fg)] py-3.5 font-semibold press"
           >
             하루 {cpd}장으로 시작
           </button>
@@ -221,6 +229,7 @@ function PlanRunner({
   const today = new Date();
   const todayDay = Math.min(Math.max(dayNumberFor(state, today), 1), plan.totalDays);
   const [viewDay, setViewDay] = useState(todayDay);
+  const [confettiTrigger, setConfettiTrigger] = useState(0);
   const assignment = plan.assignments[viewDay - 1];
   const completedCount = Object.values(state.completed).filter(Boolean).length;
   const streak = computeStreak(state, today);
@@ -228,10 +237,14 @@ function PlanRunner({
   const isToday = viewDay === todayDay;
 
   const toggleDay = () => {
+    const wasDone = !!state.completed[viewDay];
     setState({
       ...state,
-      completed: { ...state.completed, [viewDay]: !state.completed[viewDay] },
+      completed: { ...state.completed, [viewDay]: !wasDone },
     });
+    if (!wasDone) {
+      setConfettiTrigger((n) => n + 1);
+    }
   };
 
   const reset = () => {
@@ -242,15 +255,16 @@ function PlanRunner({
 
   return (
     <div className="space-y-5 fade-up">
-      <header className="rounded-3xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-5 shadow-[var(--shadow-card)]">
+      <header className="rounded-3xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-5 shadow-[var(--shadow-card)] relative overflow-hidden">
+        <Confetti trigger={confettiTrigger} />
         <div className="flex items-baseline justify-between">
           <div>
             <p className="text-[11px] uppercase tracking-wider text-[color:var(--accent)] font-semibold">
               진행 중
             </p>
-            <h1 className="text-xl font-bold tracking-tight mt-1">{plan.name}</h1>
+            <h1 className="font-serif text-2xl font-semibold tracking-tight mt-1">{plan.name}</h1>
           </div>
-          <button onClick={reset} className="text-[11px] text-[color:var(--muted)] underline">
+          <button onClick={reset} className="text-[11px] text-[color:var(--muted)] underline press">
             초기화
           </button>
         </div>
@@ -267,20 +281,20 @@ function PlanRunner({
           </div>
           <div className="h-2 rounded-full bg-[color:var(--bg)] overflow-hidden">
             <div
-              className="h-full bg-[color:var(--accent)] transition-all rounded-full"
+              className="h-full rounded-full shimmer-bar transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
       </header>
 
-      <section className="rounded-3xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-5">
+      <section className="rounded-3xl bg-[color:var(--bg-elev)] border border-[color:var(--border)] p-5 fade-up-1">
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => setViewDay(Math.max(1, viewDay - 1))}
             disabled={viewDay <= 1}
             aria-label="이전 날"
-            className="w-9 h-9 rounded-full inline-flex items-center justify-center text-[color:var(--fg-soft)] disabled:opacity-30 active:bg-[color:var(--bg)]"
+            className="w-9 h-9 rounded-full inline-flex items-center justify-center text-[color:var(--fg-soft)] disabled:opacity-30 active:bg-[color:var(--bg)] press"
           >
             <ChevronLeftIcon className="w-5 h-5" />
           </button>
@@ -288,13 +302,13 @@ function PlanRunner({
             <p className="text-[11px] uppercase tracking-wider text-[color:var(--muted)] font-medium">
               {isToday ? "오늘" : viewDay < todayDay ? "지난날" : "예정"}
             </p>
-            <p className="text-lg font-bold">Day {viewDay}</p>
+            <p className="font-serif text-2xl font-semibold">Day {viewDay}</p>
           </div>
           <button
             onClick={() => setViewDay(Math.min(plan.totalDays, viewDay + 1))}
             disabled={viewDay >= plan.totalDays}
             aria-label="다음 날"
-            className="w-9 h-9 rounded-full inline-flex items-center justify-center text-[color:var(--fg-soft)] disabled:opacity-30 active:bg-[color:var(--bg)]"
+            className="w-9 h-9 rounded-full inline-flex items-center justify-center text-[color:var(--fg-soft)] disabled:opacity-30 active:bg-[color:var(--bg)] press"
           >
             <ChevronRightIcon className="w-5 h-5" />
           </button>
@@ -308,7 +322,7 @@ function PlanRunner({
               <Link
                 key={i}
                 href={`/read?book=${u.book}&chapter=${u.chapter}`}
-                className="flex items-center justify-between rounded-xl bg-[color:var(--bg)] border border-[color:var(--border)] px-4 py-3 hover:border-[color:var(--accent)] active:scale-[0.98] transition"
+                className="flex items-center justify-between rounded-xl bg-[color:var(--bg)] border border-[color:var(--border)] px-4 py-3 press"
               >
                 <span className="font-semibold">
                   {book.koName} {u.chapter}장
@@ -321,7 +335,7 @@ function PlanRunner({
 
         <button
           onClick={toggleDay}
-          className={`w-full inline-flex items-center justify-center gap-2 rounded-full py-3.5 font-semibold transition active:scale-[0.98] ${
+          className={`w-full inline-flex items-center justify-center gap-2 rounded-full py-3.5 font-semibold transition press ${
             state.completed[viewDay]
               ? "bg-[color:var(--accent-soft)] text-[color:var(--accent)]"
               : "bg-[color:var(--accent)] text-[color:var(--accent-fg)]"
@@ -359,7 +373,7 @@ function UpcomingList({
   const days = Array.from({ length: end - start + 1 }, (_, i) => start + i);
 
   return (
-    <section>
+    <section className="fade-up-2">
       <h2 className="text-xs font-semibold tracking-widest uppercase text-[color:var(--muted)] mb-3 px-1">
         일정
       </h2>
@@ -371,7 +385,7 @@ function UpcomingList({
             <button
               key={d}
               onClick={() => setViewDay(d)}
-              className={`aspect-square rounded-lg text-sm font-semibold transition active:scale-90 ${
+              className={`aspect-square rounded-lg text-sm font-semibold transition press ${
                 done
                   ? "bg-[color:var(--accent)] text-[color:var(--accent-fg)]"
                   : isToday
